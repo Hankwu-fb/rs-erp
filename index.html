@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RS进销存管理系统 - PC版</title>
+    <title>RS进销存管理系统</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -18,360 +18,672 @@
         }
         html, body { height: 100%; font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; background: var(--bg); overflow: hidden; }
         .app { height: 100vh; display: flex; flex-direction: column; }
-        
-        /* 顶部导航 */
-        .header {
-            background: linear-gradient(135deg, var(--primary), #1d4ed8);
-            color: white; padding: 12px 24px;
-            display: flex; align-items: center; justify-content: space-between;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .header-left { display: flex; align-items: center; gap: 16px; }
-        .logo { font-size: 20px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
-        .version { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 4px; font-size: 12px; }
-        
-        /* Tab切换 */
-        .tabs { background: white; display: flex; padding: 8px 16px; gap: 8px; border-bottom: 1px solid var(--border); }
-        .tab { padding: 10px 24px; border-radius: 8px; cursor: pointer; font-size: 14px; color: var(--text-light); transition: all 0.2s; }
+        .header { background: linear-gradient(135deg, var(--primary), #1d4ed8); color: white; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.15); flex-shrink: 0; z-index: 10; }
+        .logo { font-size: 18px; font-weight: bold; }
+        .header-right { font-size: 12px; opacity: 0.8; }
+        .tabs { background: white; display: flex; padding: 6px 12px; gap: 6px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+        .tab { padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--text-light); transition: all 0.15s; }
         .tab:hover { background: #eff6ff; color: var(--primary); }
         .tab.active { background: var(--primary); color: white; }
-        
-        /* 工具栏 */
-        .toolbar { background: white; padding: 12px 24px; display: flex; gap: 12px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
-        .btn { padding: 8px 16px; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
+        .toolbar { background: white; padding: 8px 16px; display: flex; gap: 8px; border-bottom: 1px solid var(--border); flex-shrink: 0; flex-wrap: wrap; align-items: center; }
+        .btn { padding: 6px 14px; border: 1px solid var(--border); background: white; border-radius: 5px; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 5px; transition: all 0.15s; white-space: nowrap; }
         .btn:hover { background: #f9fafb; border-color: #d1d5db; }
         .btn-primary { background: var(--primary); color: white; border: none; }
         .btn-primary:hover { background: #1d4ed8; }
         .btn-success { background: var(--success); color: white; border: none; }
         .btn-danger { background: var(--danger); color: white; border: none; }
-        
-        /* 主内容 */
-        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 16px; gap: 12px; }
-        
-        /* 统计卡片 */
-        .stats { display: flex; gap: 16px; flex-wrap: wrap; }
-        .stat-card { background: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 12px; }
-        .stat-icon { font-size: 24px; }
+        .toolbar-sep { width: 1px; height: 24px; background: var(--border); margin: 0 4px; }
+        .paste-hint { font-size: 11px; color: #b45309; padding: 4px 10px; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 4px; }
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 12px; gap: 10px; }
+        .stats { display: flex; gap: 10px; flex-wrap: wrap; }
+        .stat-card { background: white; padding: 8px 16px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 10px; }
+        .stat-icon { font-size: 20px; }
         .stat-info { display: flex; flex-direction: column; }
-        .stat-value { font-size: 20px; font-weight: bold; color: var(--text); }
-        .stat-label { font-size: 12px; color: var(--text-light); }
-        
-        /* Excel表格 */
+        .stat-value { font-size: 18px; font-weight: bold; }
+        .stat-label { font-size: 11px; color: var(--text-light); }
         .excel-container { flex: 1; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow: hidden; }
-        .excel-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .excel-table th { background: #f9fafb; padding: 10px 8px; text-align: center; font-weight: 600; color: var(--text); border: 1px solid var(--border); position: sticky; top: 0; z-index: 10; white-space: nowrap; }
-        .excel-table td { border: 1px solid #f0f0f0; padding: 0; height: 40px; }
-        .excel-table tr:nth-child(even) { background: #fafafa; }
-        .excel-table tr:hover { background: #eff6ff; }
-        .cell-input { width: 100%; height: 100%; border: none; padding: 0 8px; font-size: 13px; font-family: inherit; background: transparent; outline: none; }
+        .excel-table-wrap { flex: 1; overflow: auto; }
+        .excel-table { border-collapse: collapse; font-size: 12px; min-width: 100%; }
+        .excel-table thead tr { background: #f8fafc; position: sticky; top: 0; z-index: 5; }
+        .excel-table th { padding: 0; border: 1px solid #d1d5db; font-weight: 600; color: #374151; font-size: 12px; position: relative; background: #f1f5f9; text-align: center; vertical-align: middle; min-width: 80px; }
+        .excel-table th.row-header { background: #e2e8f0; min-width: 45px; width: 45px; cursor: default; font-size: 11px; color: #64748b; }
+        .excel-table th.col-header { min-width: 100px; cursor: col-resize; }
+        .excel-table th input.header-input { width: 100%; height: 100%; border: none; padding: 0 8px; font-size: 12px; font-weight: 600; font-family: inherit; background: transparent; text-align: center; color: #374151; outline: none; cursor: text; }
+        .excel-table th input.header-input:focus { background: #eff6ff; box-shadow: inset 0 0 0 2px var(--primary); }
+        .excel-table th .col-letter { font-size: 10px; color: #94a3b8; position: absolute; top: 2px; left: 4px; pointer-events: none; }
+        .excel-table tbody tr:hover { background: #f0f9ff; }
+        .excel-table td { border: 1px solid #e5e7eb; padding: 0; height: 34px; vertical-align: middle; }
+        .excel-table td.row-num-td { background: #f1f5f9; color: #94a3b8; font-size: 11px; text-align: center; width: 45px; min-width: 45px; cursor: default; }
+        .cell-input { width: 100%; height: 100%; border: none; padding: 0 8px; font-size: 12px; font-family: inherit; background: transparent; outline: none; text-align: left; color: var(--text); }
         .cell-input:focus { background: #eff6ff; box-shadow: inset 0 0 0 2px var(--primary); }
-        .cell-readonly { padding: 0 8px; text-align: center; color: var(--text-light); height: 100%; display: flex; align-items: center; justify-content: center; background: #f9fafb; }
-        .cell-calc { padding: 0 8px; text-align: right; color: var(--primary); font-weight: 600; }
-        .cell-profit { color: var(--success) !important; }
-        .cell-loss { color: var(--danger) !important; }
-        .row-num { width: 50px; text-align: center; background: #f9fafb; color: var(--text-light); font-size: 12px; }
-        .del-cell { width: 50px; text-align: center; background: #fef2f2; }
-        .del-btn { color: var(--danger); cursor: pointer; font-size: 16px; }
-        .del-btn:hover { font-weight: bold; }
-        .table-wrapper { flex: 1; overflow: auto; }
-        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-light); }
-        .empty-icon { font-size: 48px; margin-bottom: 16px; }
-        
-        /* 提示框 */
-        .toast { position: fixed; bottom: 30px; right: 30px; background: var(--text); color: white; padding: 12px 24px; border-radius: 8px; opacity: 0; transform: translateY(20px); transition: all 0.3s; z-index: 1000; }
+        .cell-input.num { text-align: right; }
+        .cell-input[readonly] { background: #f8fafc; color: var(--primary); font-weight: 600; cursor: default; }
+        .cell-input[readonly]:focus { background: #f8fafc; box-shadow: none; }
+        .cell-formula { color: #94a3b8; font-size: 10px; position: absolute; bottom: 1px; right: 4px; pointer-events: none; }
+        .row-ops { display: flex; gap: 2px; padding: 2px; opacity: 0; transition: opacity 0.15s; justify-content: center; }
+        .excel-table tbody tr:hover .row-ops { opacity: 1; }
+        .row-op-btn { width: 18px; height: 18px; border: none; border-radius: 3px; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+        .row-op-del { background: #fee2e2; color: var(--danger); }
+        .row-op-del:hover { background: var(--danger); color: white; }
+        .row-op-add { background: #dbeafe; color: var(--primary); }
+        .row-op-add:hover { background: var(--primary); color: white; }
+        .add-row-area { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 8px; border-top: 1px dashed #e5e7eb; color: var(--text-light); font-size: 12px; cursor: pointer; transition: all 0.15s; }
+        .add-row-area:hover { background: #eff6ff; color: var(--primary); border-color: var(--primary); }
+        .empty-state { text-align: center; padding: 40px; color: var(--text-light); }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: var(--text); color: white; padding: 10px 20px; border-radius: 6px; opacity: 0; transform: translateY(10px); transition: all 0.3s; z-index: 1000; font-size: 13px; }
         .toast.show { opacity: 1; transform: translateY(0); }
-        .fullscreen-hint { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; z-index: 50; }
-        
-        /* 列宽 */
-        .col-date { width: 100px; } .col-owner { width: 70px; } .col-client { width: 100px; }
-        .col-item { width: 120px; } .col-partNo { width: 110px; } .col-supplier { width: 100px; }
-        .col-qty { width: 70px; } .col-price { width: 80px; } .col-total { width: 90px; } .col-note { width: 120px; }
-        
-        @media (max-width: 1200px) { .excel-table { font-size: 12px; } .col-note { width: 100px; } }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+        .paste-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.2s; }
+        .paste-modal.show { opacity: 1; visibility: visible; }
+        .paste-box { background: white; border-radius: 12px; min-width: 600px; max-width: 90vw; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .paste-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .paste-title { font-size: 15px; font-weight: 600; color: var(--primary); }
+        .paste-close { font-size: 22px; color: #94a3b8; cursor: pointer; }
+        .paste-close:hover { color: var(--danger); }
+        .paste-body { padding: 16px 20px; overflow: auto; flex: 1; }
+        .paste-info { padding: 10px 20px; background: #f8fafc; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-light); }
+        .paste-footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+        .preview-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .preview-table th { background: #f1f5f9; padding: 6px 10px; border: 1px solid #e5e7eb; font-weight: 600; text-align: center; }
+        .preview-table td { padding: 5px 10px; border: 1px solid #e5e7eb; text-align: center; }
+        .preview-table tr:nth-child(even) td { background: #fafafa; }
+        .fullscreen-hint { position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 5px 14px; border-radius: 20px; font-size: 11px; z-index: 50; }
     </style>
 </head>
 <body>
     <div class="app">
         <div class="header">
-            <div class="header-left">
-                <div class="logo">📦 RS进销存 <span class="version">PC版 v3.0</span></div>
-            </div>
-            <div class="header-right"><span id="info">就绪</span></div>
+            <div class="logo">📦 RS进销存 <span style="font-size:12px;opacity:0.8">v4.0</span></div>
+            <div class="header-right"><span id="saveInfo">就绪</span></div>
         </div>
         <div class="tabs">
-            <div class="tab active" data-tab="inquiry">💬 询价管理</div>
-            <div class="tab" data-tab="purchase">🛒 采购明细</div>
-            <div class="tab" data-tab="inbound">📥 入库明细</div>
-            <div class="tab" data-tab="outbound">📤 出库明细</div>
-            <div class="tab" data-tab="summary">📊 库存汇总</div>
+            <div class="tab active" data-tab="inquiry">💬 询价</div>
+            <div class="tab" data-tab="purchase">🛒 采购</div>
+            <div class="tab" data-tab="inbound">📥 入库</div>
+            <div class="tab" data-tab="outbound">📤 出库</div>
+            <div class="tab" data-tab="summary">📊 汇总</div>
         </div>
         <div class="toolbar">
-            <button class="btn btn-primary" onclick="addRow()">➕ 增行</button>
-            <button class="btn btn-success" onclick="saveToStorage()">💾 保存</button>
-            <button class="btn" onclick="exportExcel()">📤 导出Excel</button>
-            <button class="btn" onclick="document.getElementById('importFile').click()">📥 导入Excel</button>
+            <button class="btn btn-primary" onclick="addRowsUI()">➕ 增行</button>
+            <button class="btn" onclick="showPasteModal()" title="粘贴Excel数据">📋 粘贴</button>
+            <div class="toolbar-sep"></div>
+            <button class="btn btn-success" onclick="saveData()">💾 保存</button>
+            <button class="btn" onclick="exportExcel()">📤 导出</button>
+            <button class="btn" onclick="document.getElementById('importFile').click()">📥 导入</button>
             <input type="file" id="importFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="importExcel(this)">
             <button class="btn btn-danger" onclick="clearTable()">🗑️ 清空</button>
-            <button class="btn" onclick="toggleFullscreen()">⛶ 全屏</button>
+            <div class="toolbar-sep"></div>
+            <button class="btn" onclick="addColumn()">➕ 增列</button>
+            <div class="paste-hint">💡 Ctrl+V 直接粘贴Excel多行数据</div>
         </div>
         <div class="main">
             <div class="stats">
-                <div class="stat-card"><span class="stat-icon">💬</span><div class="stat-info"><span class="stat-value" id="stat-inquiry">0</span><span class="stat-label">询价记录</span></div></div>
-                <div class="stat-card"><span class="stat-icon">🛒</span><div class="stat-info"><span class="stat-value" id="stat-purchase">0</span><span class="stat-label">采购单</span></div></div>
-                <div class="stat-card"><span class="stat-icon">📥</span><div class="stat-info"><span class="stat-value" id="stat-inbound">0</span><span class="stat-label">入库单</span></div></div>
-                <div class="stat-card"><span class="stat-icon">📤</span><div class="stat-info"><span class="stat-value" id="stat-outbound">0</span><span class="stat-label">出库单</span></div></div>
+                <div class="stat-card"><span class="stat-icon">💬</span><div class="stat-info"><span class="stat-value" id="stat-inquiry">0</span><span class="stat-label">询价</span></div></div>
+                <div class="stat-card"><span class="stat-icon">🛒</span><div class="stat-info"><span class="stat-value" id="stat-purchase">0</span><span class="stat-label">采购</span></div></div>
+                <div class="stat-card"><span class="stat-icon">📥</span><div class="stat-info"><span class="stat-value" id="stat-inbound">0</span><span class="stat-label">入库</span></div></div>
+                <div class="stat-card"><span class="stat-icon">📤</span><div class="stat-info"><span class="stat-value" id="stat-outbound">0</span><span class="stat-label">出库</span></div></div>
             </div>
             <div class="excel-container">
-                <div class="table-wrapper">
+                <div class="excel-table-wrap">
                     <table class="excel-table" id="mainTable">
                         <thead id="tableHead"></thead>
                         <tbody id="tableBody"></tbody>
                     </table>
                 </div>
+                <div class="add-row-area" onclick="addRowsUI()">➕ 点击增行</div>
             </div>
         </div>
     </div>
-    <div class="toast" id="toast"></div>
-    <div class="fullscreen-hint" id="fullscreenHint">按 F11 可进入全屏模式</div>
 
-    <script>
-        let DB = { currentTab: 'inquiry', data: { inquiry: [], purchase: [], inbound: [], outbound: [] }, maxId: 1000 };
-        
-        const SCHEMAS = {
-            inquiry: { cols: [
-                {k:'date',l:'日期',w:'col-date'},{k:'client',l:'客户',w:'col-client'},{k:'item',l:'产品',w:'col-item'},
-                {k:'qty',l:'数量',w:'col-qty',type:'number'},{k:'price',l:'单价',w:'col-price',type:'number'},
-                {k:'total',l:'总额',w:'col-total',calc:true,fmt:'money'},{k:'note',l:'备注',w:'col-note'}
-            ]},
-            purchase: { cols: [
-                {k:'date',l:'日期',w:'col-date'},{k:'owner',l:'负责人',w:'col-owner'},{k:'partNo',l:'料号',w:'col-partNo'},
-                {k:'supplier',l:'供应商',w:'col-supplier'},{k:'reqQty',l:'需求数',w:'col-qty',type:'number'},
-                {k:'purQty',l:'采购数',w:'col-qty',type:'number'},{k:'purPrice',l:'采购单价',w:'col-price',type:'number'},
-                {k:'purTotal',l:'采购额',w:'col-total',calc:true,fmt:'money'},{k:'sellPrice',l:'销售单价',w:'col-price',type:'number'},
-                {k:'sellTotal',l:'销售额',w:'col-total',calc:true,fmt:'money'},{k:'margin',l:'毛利率',w:'col-qty',calc:true,fmt:'percent'}
-            ]},
-            inbound: { cols: [
-                {k:'owner',l:'负责人',w:'col-owner'},{k:'partNo',l:'料号',w:'col-partNo'},{k:'supplier',l:'供应商',w:'col-supplier'},
-                {k:'client',l:'客户',w:'col-client'},{k:'inDate',l:'收货日',w:'col-date'},
-                {k:'inQty',l:'入库数',w:'col-qty',type:'number'},{k:'costPrice',l:'采购单价',w:'col-price',type:'number'},
-                {k:'costTotal',l:'采购额',w:'col-total',calc:true,fmt:'money'},{k:'note',l:'备注',w:'col-note'}
-            ]},
-            outbound: { cols: [
-                {k:'owner',l:'负责人',w:'col-owner'},{k:'partNo',l:'料号',w:'col-partNo'},{k:'client',l:'客户',w:'col-client'},
-                {k:'outDate',l:'交货日',w:'col-date'},{k:'outQty',l:'出库数',w:'col-qty',type:'number'},
-                {k:'sellPrice',l:'销售单价',w:'col-price',type:'number'},{k:'sellTotal',l:'销售额',w:'col-total',calc:true,fmt:'money'},
-                {k:'costPriceRef',l:'参考成本',w:'col-price',type:'number'},{k:'margin',l:'毛利率',w:'col-qty',calc:true,fmt:'percent'},
-                {k:'note',l:'备注',w:'col-note'}
-            ]},
-            summary: { cols: [
-                {k:'partNo',l:'料号',w:'col-partNo'},{k:'supplier',l:'供应商',w:'col-supplier'},
-                {k:'orderQty',l:'下单数',w:'col-qty'},{k:'inQty',l:'入库数',w:'col-qty'},
-                {k:'pending',l:'未交数',w:'col-qty'},{k:'stock',l:'库存数',w:'col-qty'}
-            ], readonly: true }
-        };
-        
-        function init() { loadFromStorage(); renderTabs(); switchTab(DB.currentTab); updateStats(); }
-        
-        function loadFromStorage() {
-            const saved = localStorage.getItem('rsErpDataPC');
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    DB.data = { ...DB.data, ...parsed.data }; DB.maxId = parsed.maxId || 1000;
-                } catch (e) {}
-            }
-        }
-        
-        function saveToStorage() {
-            localStorage.setItem('rsErpDataPC', JSON.stringify({ data: DB.data, maxId: DB.maxId, lastSave: new Date().getTime() }));
-            showToast('✅ 已保存');
-        }
-        
-        function renderTabs() { document.querySelectorAll('.tab').forEach(tab => { tab.addEventListener('click', () => switchTab(tab.dataset.tab)); }); }
-        
-        function switchTab(tabId) {
-            DB.currentTab = tabId;
-            document.querySelectorAll('.tab').forEach(t => { t.classList.toggle('active', t.dataset.tab === tabId); });
-            renderTable(); updateStats();
-        }
-        
-        function updateStats() {
-            ['inquiry','purchase','inbound','outbound'].forEach(t => { document.getElementById('stat-'+t).textContent = DB.data[t].length; });
-            const names = {inquiry:'询价管理',purchase:'采购明细',inbound:'入库明细',outbound:'出库明细',summary:'库存汇总'};
-            const saved = localStorage.getItem('rsErpDataPC');
-            const lastSave = saved ? new Date(JSON.parse(saved).lastSave).toLocaleString() : '未保存';
-            document.getElementById('info').textContent = `${names[DB.currentTab]}: ${getCurrentList().length}条 | ${lastSave}`;
-        }
-        
-        function getCurrentList() { return DB.currentTab === 'summary' ? calculateSummary() : DB.data[DB.currentTab] || []; }
-        
-        function calculateSummary() {
-            const map = {};
-            DB.data.purchase.forEach(p => {
-                const key = (p.partNo||'') + '|' + (p.supplier||'');
-                if (!map[key]) map[key] = { partNo: p.partNo||'', supplier: p.supplier||'', orderQty: 0, inQty: 0 };
-                map[key].orderQty += parseFloat(p.purQty)||0;
+    <!-- 粘贴预览弹窗 -->
+    <div class="paste-modal" id="pasteModal">
+        <div class="paste-box">
+            <div class="paste-header">
+                <span class="paste-title">📋 粘贴数据预览（将粘贴到当前表）</span>
+                <span class="paste-close" onclick="closePasteModal()">×</span>
+            </div>
+            <div class="paste-body" id="pastePreviewBody"></div>
+            <div class="paste-info" id="pastePreviewInfo"></div>
+            <div class="paste-footer">
+                <button class="btn" onclick="closePasteModal()">取消</button>
+                <button class="btn btn-primary" onclick="confirmPaste()">✅ 确认粘贴</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+    <div class="fullscreen-hint">按 F11 全屏 | Ctrl+V 粘贴Excel</div>
+
+<script>
+// ===== 数据模型 =====
+let DB = { tab: 'inquiry', data: {}, lastSave: null };
+let pendingPasteRows = null;
+
+const DEFAULT_SCHEMAS = {
+    inquiry: {
+        cols: [
+            {key: 'date', label: '日期', type: 'text', width: 100},
+            {key: 'client', label: '客户', type: 'text', width: 120},
+            {key: 'item', label: '产品', type: 'text', width: 130},
+            {key: 'qty', label: '数量', type: 'number', width: 80},
+            {key: 'price', label: '单价', type: 'number', width: 90},
+            {key: 'total', label: '总额', type: 'calc', formula: 'qty*price', fmt: '¥{v}', width: 100},
+            {key: 'note', label: '备注', type: 'text', width: 140}
+        ], rows: []
+    },
+    purchase: {
+        cols: [
+            {key: 'date', label: '日期', type: 'text', width: 100},
+            {key: 'owner', label: '负责人', type: 'text', width: 70},
+            {key: 'partNo', label: '料号', type: 'text', width: 120},
+            {key: 'supplier', label: '供应商', type: 'text', width: 110},
+            {key: 'reqQty', label: '需求数', type: 'number', width: 75},
+            {key: 'purQty', label: '采购数', type: 'number', width: 75},
+            {key: 'purPrice', label: '采购单价', type: 'number', width: 90},
+            {key: 'purTotal', label: '采购额', type: 'calc', formula: 'purQty*purPrice', fmt: '¥{v}', width: 100},
+            {key: 'sellPrice', label: '销售单价', type: 'number', width: 90},
+            {key: 'sellTotal', label: '销售额', type: 'calc', formula: 'purQty*sellPrice', fmt: '¥{v}', width: 100},
+            {key: 'margin', label: '毛利率', type: 'calc', formula: '(sellTotal-purTotal)/sellTotal*100', fmt: '{v}%', width: 70},
+            {key: 'note', label: '备注', type: 'text', width: 120}
+        ], rows: []
+    },
+    inbound: {
+        cols: [
+            {key: 'owner', label: '负责人', type: 'text', width: 70},
+            {key: 'partNo', label: '料号', type: 'text', width: 120},
+            {key: 'supplier', label: '供应商', type: 'text', width: 110},
+            {key: 'client', label: '客户', type: 'text', width: 90},
+            {key: 'inDate', label: '收货日', type: 'text', width: 100},
+            {key: 'inQty', label: '入库数', type: 'number', width: 75},
+            {key: 'costPrice', label: '采购单价', type: 'number', width: 90},
+            {key: 'costTotal', label: '采购额', type: 'calc', formula: 'inQty*costPrice', fmt: '¥{v}', width: 100},
+            {key: 'note', label: '备注', type: 'text', width: 130}
+        ], rows: []
+    },
+    outbound: {
+        cols: [
+            {key: 'owner', label: '负责人', type: 'text', width: 70},
+            {key: 'partNo', label: '料号', type: 'text', width: 120},
+            {key: 'client', label: '客户', type: 'text', width: 90},
+            {key: 'outDate', label: '交货日', type: 'text', width: 100},
+            {key: 'outQty', label: '出库数', type: 'number', width: 75},
+            {key: 'sellPrice', label: '销售单价', type: 'number', width: 90},
+            {key: 'sellTotal', label: '销售额', type: 'calc', formula: 'outQty*sellPrice', fmt: '¥{v}', width: 100},
+            {key: 'costPriceRef', label: '参考成本', type: 'number', width: 90},
+            {key: 'margin', label: '毛利率', type: 'calc', formula: '(sellTotal-outQty*costPriceRef)/sellTotal*100', fmt: '{v}%', width: 70},
+            {key: 'note', label: '备注', type: 'text', width: 120}
+        ], rows: []
+    },
+    summary: {
+        cols: [
+            {key: 'partNo', label: '料号', type: 'text', width: 130},
+            {key: 'supplier', label: '供应商', type: 'text', width: 120},
+            {key: 'orderQty', label: '下单数', type: 'number', width: 80},
+            {key: 'inQty', label: '入库数', type: 'number', width: 80},
+            {key: 'pending', label: '未交数', type: 'calc', formula: 'orderQty-inQty', fmt: null, width: 80},
+            {key: 'stock', label: '库存数', type: 'number', width: 80}
+        ], rows: []
+    }
+};
+
+// ===== 初始化 =====
+function init() {
+    loadData();
+    renderTabs();
+    switchTab(DB.tab);
+    document.addEventListener('keydown', handleKeydown);
+    document.addEventListener('paste', handlePaste);
+}
+
+function loadData() {
+    const saved = localStorage.getItem('rsErpV4');
+    if (saved) {
+        try {
+            const p = JSON.parse(saved);
+            DB.data = p.data || {};
+            DB.lastSave = p.lastSave;
+            Object.keys(DEFAULT_SCHEMAS).forEach(t => {
+                if (!DB.data[t]) DB.data[t] = JSON.parse(JSON.stringify(DEFAULT_SCHEMAS[t]));
+                else {
+                    DB.data[t].cols = DB.data[t].cols || DEFAULT_SCHEMAS[t].cols;
+                    DB.data[t].rows = DB.data[t].rows || [];
+                }
             });
-            DB.data.inbound.forEach(i => {
-                const key = (i.partNo||'') + '|' + (i.supplier||'');
-                if (!map[key]) map[key] = { partNo: i.partNo||'', supplier: i.supplier||'', orderQty: 0, inQty: 0 };
-                map[key].inQty += parseFloat(i.inQty)||0;
-            });
-            const outMap = {}, inMap = {};
-            DB.data.outbound.forEach(o => { const k=o.partNo||''; outMap[k]=(outMap[k]||0)+(parseFloat(o.outQty)||0); });
-            DB.data.inbound.forEach(i => { const k=i.partNo||''; inMap[k]=(inMap[k]||0)+(parseFloat(i.inQty)||0); });
-            return Object.values(map).map(item => ({ ...item, pending: item.orderQty - item.inQty, stock: (inMap[item.partNo]||0) - (outMap[item.partNo]||0) }));
-        }
-        
-        function renderTable() {
-            const schema = SCHEMAS[DB.currentTab];
-            const rows = getCurrentList();
-            let thHtml = '<tr><th class="row-num">#</th>';
-            schema.cols.forEach(col => { thHtml += `<th class="${col.w}">${col.l}</th>`; });
-            if (!schema.readonly) thHtml += '<th class="del-cell">删</th>';
-            thHtml += '</tr>';
-            document.getElementById('tableHead').innerHTML = thHtml;
-            
-            if (rows.length === 0) {
-                document.getElementById('tableBody').innerHTML = `<tr><td colspan="${schema.cols.length+2}" class="empty-state"><div class="empty-icon">📋</div>暂无数据，点击「增行」添加</td></tr>`;
-                return;
+        } catch(e) { initDefault(); }
+    } else { initDefault(); }
+}
+
+function initDefault() {
+    Object.keys(DEFAULT_SCHEMAS).forEach(t => { DB.data[t] = JSON.parse(JSON.stringify(DEFAULT_SCHEMAS[t])); });
+}
+
+function saveData() {
+    localStorage.setItem('rsErpV4', JSON.stringify({ data: DB.data, lastSave: new Date().toISOString() }));
+    DB.lastSave = new Date().toISOString();
+    showToast('已保存', 'success');
+    updateSaveInfo();
+}
+
+function autoSave() {
+    localStorage.setItem('rsErpV4', JSON.stringify({ data: DB.data, lastSave: DB.lastSave || new Date().toISOString() }));
+}
+
+// ===== Tab =====
+function renderTabs() {
+    document.querySelectorAll('.tab').forEach(t => {
+        t.addEventListener('click', () => switchTab(t.dataset.tab));
+    });
+}
+
+function switchTab(tabId) {
+    DB.tab = tabId;
+    document.querySelectorAll('.tab').forEach(t => { t.classList.toggle('active', t.dataset.tab === tabId); });
+    renderTable();
+    updateStats();
+    updateSaveInfo();
+}
+
+// ===== 渲染表格 =====
+function renderTable() {
+    const schema = DB.data[DB.tab];
+    const rows = schema.rows || [];
+
+    // 表头
+    let th = '<tr>';
+    th += '<th class="row-header"><div class="col-letter">#</div></th>';
+    schema.cols.forEach((col, ci) => {
+        const letter = String.fromCharCode(65 + ci);
+        th += `<th class="col-header" style="min-width:${col.width}px" data-col="${ci}">
+            <div class="col-letter">${letter}</div>
+            <input class="header-input" value="${escHtml(col.label)}" data-col="${ci}" onchange="renameColumn(this, ${ci})" />
+        </th>`;
+    });
+    th += '<th class="row-header" style="width:60px">操作</th>';
+    th += '</tr>';
+    document.getElementById('tableHead').innerHTML = th;
+
+    // 表体
+    if (rows.length === 0) {
+        document.getElementById('tableBody').innerHTML = `<tr><td colspan="${schema.cols.length + 2}" class="empty-state"><div style="font-size:36px;margin-bottom:8px">📋</div>暂无数据<br><span style="font-size:12px">点击「增行」添加，或 Ctrl+V 粘贴Excel数据</span></td></tr>`;
+        return;
+    }
+
+    let tbody = '';
+    rows.forEach((row, ri) => {
+        tbody += '<tr>';
+        tbody += `<td class="row-num-td">${ri + 1}</td>`;
+        schema.cols.forEach((col, ci) => {
+            const letter = String.fromCharCode(65 + ci);
+            const cellId = letter + (ri + 1);
+            const val = row[col.key] !== undefined ? row[col.key] : '';
+
+            if (col.type === 'calc') {
+                const cv = calcCell(row, col);
+                const dv = col.fmt ? col.fmt.replace('{v}', cv !== null ? Number(cv).toFixed(2) : '-') : (cv !== null ? cv : '');
+                tbody += `<td style="min-width:${col.width}px">
+                    <input class="cell-input" value="${dv}" readonly data-row="${ri}" data-col="${ci}" data-cell="${cellId}" />
+                    <span class="cell-formula">=${col.formula}</span>
+                </td>`;
+            } else {
+                const tp = col.type === 'number' ? 'number' : 'text';
+                const step = col.type === 'number' ? ' step="any"' : '';
+                tbody += `<td style="min-width:${col.width}px">
+                    <input class="cell-input ${col.type === 'number' ? 'num' : ''}" type="${tp}"${step} value="${escHtml(val)}" data-row="${ri}" data-col="${ci}" data-key="${col.key}" data-cell="${cellId}" onchange="onCellChange(this, ${ri}, '${col.key}')" onfocus="this.select()" />
+                </td>`;
             }
-            
-            let tbody = '';
-            rows.forEach((row, idx) => {
-                tbody += '<tr><td class="row-num">' + (idx+1) + '</td>';
-                schema.cols.forEach(col => {
-                    if (col.calc) {
-                        let val = row[col.k];
-                        if (col.fmt === 'money') val = '¥' + Number(val||0).toFixed(2);
-                        if (col.fmt === 'percent') val = Number(val||0).toFixed(1) + '%';
-                        let cls = 'cell-readonly cell-calc';
-                        if (col.k === 'margin') cls += val>0?' cell-profit':val<0?' cell-loss':'';
-                        if ((col.k==='pending'||col.k==='stock')&&val<0) cls += ' cell-loss';
-                        tbody += `<td class="${col.w}"><div class="${cls}">${val}</div></td>`;
+        });
+        tbody += `<td style="width:60px">
+            <div class="row-ops">
+                <button class="row-op-btn row-op-add" onclick="insertRowAt(${ri})" title="上方插入行">+</button>
+                <button class="row-op-btn row-op-del" onclick="deleteRow(${ri})" title="删除行">×</button>
+            </div>
+        </td>`;
+        tbody += '</tr>';
+    });
+    document.getElementById('tableBody').innerHTML = tbody;
+}
+
+function escHtml(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ===== 单元格计算 =====
+function calcCell(row, col) {
+    if (!col.formula) return null;
+    try {
+        let expr = col.formula;
+        Object.keys(row).forEach(k => {
+            let v = row[k];
+            if (typeof v === 'string') v = parseFloat(v) || 0;
+            expr = expr.replace(new RegExp(k, 'g'), v);
+        });
+        return Function('"use strict"; return (' + expr + ')')();
+    } catch(e) { return null; }
+}
+
+function recalcAllCalcs() {
+    const schema = DB.data[DB.tab];
+    schema.rows.forEach((row, ri) => {
+        schema.cols.forEach((col, ci) => {
+            if (col.type !== 'calc') return;
+            const cv = calcCell(row, col);
+            const dv = col.fmt ? col.fmt.replace('{v}', cv !== null ? Number(cv).toFixed(2) : '-') : (cv !== null ? cv : '');
+            const letter = String.fromCharCode(65 + ci);
+            const inp = document.getElementById(letter + (ri + 1));
+            if (inp) inp.value = dv;
+        });
+    });
+}
+
+function onCellChange(inp, ri, key) {
+    let val = inp.value;
+    const schema = DB.data[DB.tab];
+    const col = schema.cols.find(c => c.key === key);
+    if (col && col.type === 'number') val = parseFloat(val) || 0;
+    DB.data[DB.tab].rows[ri][key] = val;
+    recalcAllCalcs();
+    autoSave();
+}
+
+// ===== 列操作 =====
+function renameColumn(inp, ci) {
+    DB.data[DB.tab].cols[ci].label = inp.value;
+    autoSave();
+}
+
+function addColumn() {
+    const name = prompt('新列名称:', '新列');
+    if (!name) return;
+    DB.data[DB.tab].cols.push({ key: 'col_' + Date.now(), label: name, type: 'text', width: 100 });
+    renderTable();
+    autoSave();
+    showToast('已增加列', 'success');
+}
+
+// ===== 行操作 =====
+function addRowsUI() {
+    if (DB.tab === 'summary') { recalcSummary(); showToast('汇总已刷新', 'success'); return; }
+    const n = parseInt(prompt('增行数量:', '1')) || 1;
+    const schema = DB.data[DB.tab];
+    for (let i = 0; i < n; i++) {
+        let nr = {};
+        schema.cols.forEach(c => { nr[c.key] = c.type === 'number' ? 0 : ''; });
+        schema.rows.push(nr);
+    }
+    renderTable();
+    autoSave();
+    showToast(`新增${n}行`, 'success');
+}
+
+function insertRowAt(ri) {
+    const schema = DB.data[DB.tab];
+    let nr = {};
+    schema.cols.forEach(c => { nr[c.key] = c.type === 'number' ? 0 : ''; });
+    schema.rows.splice(ri, 0, nr);
+    renderTable();
+    autoSave();
+}
+
+function deleteRow(ri) {
+    if (!confirm('删除第 ' + (ri + 1) + ' 行？')) return;
+    DB.data[DB.tab].rows.splice(ri, 1);
+    renderTable();
+    autoSave();
+}
+
+function clearTable() {
+    if (DB.tab === 'summary') { showToast('汇总表不可清空', 'error'); return; }
+    if (!confirm('清空所有数据？')) return;
+    DB.data[DB.tab].rows = [];
+    renderTable();
+    autoSave();
+    showToast('已清空', 'success');
+}
+
+// ===== 汇总 =====
+function recalcSummary() {
+    const rows = [];
+    const map = {};
+    (DB.data.purchase.rows || []).forEach(p => {
+        const k = (p.partNo||'') + '|' + (p.supplier||'');
+        if (!map[k]) map[k] = {partNo: p.partNo||'', supplier: p.supplier||'', orderQty: 0, inQty: 0};
+        map[k].orderQty += parseFloat(p.purQty)||0;
+    });
+    (DB.data.inbound.rows || []).forEach(i => {
+        const k = (i.partNo||'') + '|' + (i.supplier||'');
+        if (!map[k]) map[k] = {partNo: i.partNo||'', supplier: i.supplier||'', orderQty: 0, inQty: 0};
+        map[k].inQty += parseFloat(i.inQty)||0;
+    });
+    const outMap = {}, inMap = {};
+    (DB.data.outbound.rows || []).forEach(o => { const k = o.partNo||''; outMap[k] = (outMap[k]||0)+(parseFloat(o.outQty)||0); });
+    (DB.data.inbound.rows || []).forEach(i => { const k = i.partNo||''; inMap[k] = (inMap[k]||0)+(parseFloat(i.inQty)||0); });
+    Object.values(map).forEach(item => {
+        rows.push({...item, pending: item.orderQty - item.inQty, stock: (inMap[item.partNo]||0)-(outMap[item.partNo]||0)});
+    });
+    DB.data.summary.rows = rows;
+    renderTable();
+    autoSave();
+}
+
+// ===== 粘贴Excel =====
+function showPasteModal() {
+    const textarea = document.createElement('textarea');
+    textarea.style.cssText = 'position:fixed;top:0;left:0;opacity:0;width:1px;height:1px;';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    setTimeout(() => {
+        document.body.removeChild(textarea);
+        showToast('请在输入框中粘贴数据（Ctrl+V）', 'success');
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;padding:10px;width:300px;font-size:14px;border:2px solid #2563eb;border-radius:8px;';
+        input.placeholder = '粘贴Excel数据（Tab分隔）...';
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:9998;';
+        const box = document.createElement('div');
+        box.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:12px;z-index:10000;min-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
+        box.innerHTML = '<div style="font-size:15px;font-weight:600;color:#2563eb;margin-bottom:12px">📋 粘贴Excel数据</div><div style="font-size:12px;color:#6b7280;margin-bottom:10px">从Excel复制数据（多行多列），在这里粘贴：</div>';
+        const ta = document.createElement('textarea');
+        ta.style.cssText = 'width:100%;height:120px;border:1px solid #e5e7eb;border-radius:6px;padding:10px;font-size:12px;resize:vertical;';
+        box.appendChild(ta);
+        const btns = document.createElement('div');
+        btns.style.cssText = 'display:flex;gap:10px;justify-content:flex-end;margin-top:12px;';
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = '取消';
+        cancelBtn.style.cssText = 'padding:8px 16px;border:1px solid #e5e7eb;background:white;border-radius:5px;cursor:pointer;';
+        cancelBtn.onclick = () => { document.body.removeChild(box); document.body.removeChild(overlay); };
+        const okBtn = document.createElement('button');
+        okBtn.textContent = '确认粘贴';
+        okBtn.style.cssText = 'padding:8px 16px;border:none;background:#2563eb;color:white;border-radius:5px;cursor:pointer;font-weight:600;';
+        okBtn.onclick = () => {
+            const text = ta.value.trim();
+            if (!text) return;
+            const lines = text.split('\n').filter(l => l.trim());
+            const parsed = lines.map(line => line.split('\t').map(c => c.trim()));
+            // 匹配到对应列
+            const schema = DB.data[DB.tab];
+            const newRows = [];
+            parsed.forEach(row => {
+                let nr = {};
+                schema.cols.forEach((col, ci) => {
+                    if (row[ci] !== undefined) {
+                        nr[col.key] = col.type === 'number' ? (parseFloat(row[ci]) || 0) : row[ci];
                     } else {
-                        const type = col.type==='number'?'number':'text';
-                        tbody += `<td class="${col.w}"><input type="${type}" class="cell-input" value="${row[col.k]||''}" data-row="${idx}" data-col="${col.k}" onchange="updateCell(this)" /></td>`;
+                        nr[col.key] = col.type === 'number' ? 0 : '';
                     }
                 });
-                if (!schema.readonly) tbody += `<td class="del-cell"><span class="del-btn" onclick="deleteRow(${idx})">✕</span></td>`;
-                tbody += '</tr>';
+                newRows.push(nr);
             });
-            document.getElementById('tableBody').innerHTML = tbody;
-        }
-        
-        function updateCell(input) {
-            const idx = parseInt(input.dataset.row), key = input.dataset.col;
-            let value = input.value;
-            const schema = SCHEMAS[DB.currentTab];
-            const colDef = schema.cols.find(c => c.k === key);
-            if (colDef && colDef.type === 'number') value = parseFloat(value)||0;
-            DB.data[DB.currentTab][idx][key] = value;
-            recalcRow(idx); renderTable();
-        }
-        
-        function recalcRow(idx) {
-            const row = DB.data[DB.currentTab][idx];
-            if (DB.currentTab==='inquiry') { row.total = (row.qty||0)*(row.price||0); }
-            else if (DB.currentTab==='purchase') {
-                row.purTotal = (row.purQty||0)*(row.purPrice||0);
-                row.sellTotal = (row.purQty||0)*(row.sellPrice||0);
-                const c=row.purTotal, s=row.sellTotal;
-                row.margin = s===0?0:(s-c)/s*100;
-            } else if (DB.currentTab==='inbound') { row.costTotal = (row.inQty||0)*(row.costPrice||0); }
-            else if (DB.currentTab==='outbound') {
-                row.sellTotal = (row.outQty||0)*(row.sellPrice||0);
-                const c=(row.outQty||0)*(row.costPriceRef||0), s=row.sellTotal;
-                row.margin = s===0?0:(s-c)/s*100;
+            DB.data[DB.tab].rows = [...DB.data[DB.tab].rows, ...newRows];
+            renderTable();
+            autoSave();
+            document.body.removeChild(box);
+            document.body.removeChild(overlay);
+            showToast(`成功粘贴 ${newRows.length} 行`, 'success');
+        };
+        btns.appendChild(cancelBtn);
+        btns.appendChild(okBtn);
+        box.appendChild(btns);
+        document.body.appendChild(overlay);
+        document.body.appendChild(box);
+        ta.focus();
+        overlay.onclick = () => { document.body.removeChild(box); document.body.removeChild(overlay); };
+    }, 50);
+}
+
+function handlePaste(e) {
+    // 监听全局粘贴，自动处理
+}
+
+function closePasteModal() {
+    const m = document.getElementById('pasteModal');
+    if (m) m.classList.remove('show');
+}
+
+// ===== 快捷键 =====
+function handleKeydown(e) {
+    // Ctrl+S 保存
+    if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveData(); }
+    // Ctrl+N 增行
+    if (e.ctrlKey && e.key === 'n') { e.preventDefault(); addRowsUI(); }
+    // Delete 删除选中行（如果焦点在行号上）
+}
+
+// ===== 统计 =====
+function updateStats() {
+    ['inquiry','purchase','inbound','outbound'].forEach(t => {
+        const el = document.getElementById('stat-' + t);
+        if (el) el.textContent = (DB.data[t].rows || []).length;
+    });
+}
+
+function updateSaveInfo() {
+    const el = document.getElementById('saveInfo');
+    if (!el) return;
+    if (DB.lastSave) {
+        const d = new Date(DB.lastSave);
+        el.textContent = '已保存: ' + d.toLocaleTimeString();
+    } else {
+        el.textContent = '未保存';
+    }
+}
+
+// ===== 导入导出 =====
+function exportExcel() {
+    const schema = DB.data[DB.tab];
+    const rows = schema.rows || [];
+    if (rows.length === 0) { showToast('无数据', 'error'); return; }
+    const headers = schema.cols.map(c => c.label);
+    const data = rows.map(row => schema.cols.map(c => {
+        let v = row[c.key];
+        if (c.type === 'calc') v = calcCell(row, c);
+        return v;
+    }));
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, DB.tab);
+    const names = {inquiry:'询价',purchase:'采购',inbound:'入库',outbound:'出库',summary:'汇总'};
+    XLSX.writeFile(wb, `${names[DB.tab]}_${new Date().toLocaleDateString().replace(/\//g,'-')}.xlsx`);
+    showToast('导出成功', 'success');
+}
+
+function importExcel(input) {
+    const file = input.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type:'array'});
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(worksheet, {header:1, defval:''});
+            if (json.length < 2) { showToast('无数据', 'error'); return; }
+            const schema = DB.data[DB.tab];
+            let count = 0;
+            for (let i = 1; i < json.length; i++) {
+                const row = json[i];
+                if (!row.some(v => v !== '')) continue;
+                let nr = {};
+                schema.cols.forEach((col, ci) => {
+                    let v = row[ci];
+                    if (v === undefined || v === null) v = '';
+                    nr[col.key] = col.type === 'number' ? (parseFloat(v) || 0) : String(v);
+                });
+                schema.rows.push(nr);
+                count++;
             }
-        }
-        
-        function addRow() {
-            if (DB.currentTab==='summary') { showToast('⚠️ 汇总表不可添加'); return; }
-            const today = new Date().toISOString().split('T')[0];
-            let newRow = { id: ++DB.maxId, date: today };
-            if (DB.currentTab==='inquiry') Object.assign(newRow, {client:'',item:'',qty:0,price:0,total:0,note:''});
-            else if (DB.currentTab==='purchase') Object.assign(newRow, {owner:'',partNo:'',supplier:'',reqQty:0,purQty:0,purPrice:0,purTotal:0,sellPrice:0,sellTotal:0,margin:0});
-            else if (DB.currentTab==='inbound') Object.assign(newRow, {owner:'',partNo:'',supplier:'',client:'',inDate:today,inQty:0,costPrice:0,costTotal:0,note:''});
-            else if (DB.currentTab==='outbound') Object.assign(newRow, {owner:'',partNo:'',client:'',outDate:today,outQty:0,sellPrice:0,sellTotal:0,costPriceRef:0,margin:0,note:''});
-            DB.data[DB.currentTab].unshift(newRow);
-            renderTable(); updateStats();
-        }
-        
-        function deleteRow(idx) { if (!confirm('确定删除第'+(idx+1)+'行?')) return; DB.data[DB.currentTab].splice(idx,1); renderTable(); updateStats(); }
-        function clearTable() { if (DB.currentTab==='summary') { showToast('⚠️ 汇总表不可清空'); return; } if (!confirm('确定清空?')) return; DB.data[DB.currentTab]=[]; renderTable(); updateStats(); saveToStorage(); }
-        
-        function exportExcel() {
-            const rows = getCurrentList();
-            if (rows.length === 0) { showToast('⚠️ 无数据'); return; }
-            const schema = SCHEMAS[DB.currentTab];
-            const headers = schema.cols.map(c => c.l);
-            const data = rows.map(row => {
-                const r = {};
-                schema.cols.forEach(c => { let val = row[c.k]; if (c.calc&&c.fmt==='money') val=Number(val||0).toFixed(2); if (c.calc&&c.fmt==='percent') val=Number(val||0).toFixed(1); r[c.l]=val; });
-                return r;
-            });
-            const ws = XLSX.utils.json_to_sheet(data, {header: headers});
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, schema.id);
-            const names = {inquiry:'询价管理',purchase:'采购明细',inbound:'入库明细',outbound:'出库明细',summary:'库存汇总'};
-            XLSX.writeFile(wb, `${names[DB.currentTab]}_${new Date().toLocaleDateString().replace(/\//g,'-')}.xlsx`);
-            showToast('📤 导出成功');
-        }
-        
-        function importExcel(input) {
-            const file = input.files[0]; if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, {type:'array'});
-                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const json = XLSX.utils.sheet_to_json(worksheet, {defval:''});
-                    const schema = SCHEMAS[DB.currentTab];
-                    let count = 0;
-                    json.forEach(row => {
-                        const newRow = { id: ++DB.maxId }; let hasData = false;
-                        schema.cols.forEach(col => {
-                            let val = row[col.l];
-                            if (val !== undefined && val !== '') { hasData = true; if (col.type==='number') val=parseFloat(val)||0; } else { val = col.type==='number'?0:''; }
-                            newRow[col.k] = val;
-                        });
-                        if (hasData) {
-                            if (DB.currentTab==='inquiry') newRow.total=(newRow.qty||0)*(newRow.price||0);
-                            else if (DB.currentTab==='purchase') {
-                                newRow.purTotal=(newRow.purQty||0)*(newRow.purPrice||0); newRow.sellTotal=(newRow.purQty||0)*(newRow.sellPrice||0);
-                                const c=newRow.purTotal, s=newRow.sellTotal; newRow.margin=s===0?0:(s-c)/s*100;
-                            } else if (DB.currentTab==='inbound') newRow.costTotal=(newRow.inQty||0)*(newRow.costPrice||0);
-                            else if (DB.currentTab==='outbound') {
-                                newRow.sellTotal=(newRow.outQty||0)*(newRow.sellPrice||0);
-                                const c=(newRow.outQty||0)*(newRow.costPriceRef||0), s=newRow.sellTotal; newRow.margin=s===0?0:(s-c)/s*100;
-                            }
-                            DB.data[DB.currentTab].push(newRow); count++;
-                        }
-                    });
-                    renderTable(); updateStats(); saveToStorage();
-                    showToast(`📥 导入${count}条`);
-                } catch (err) { showToast('❌ 导入失败'); }
-                input.value = '';
-            };
-            reader.readAsArrayBuffer(file);
-        }
-        
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-            else document.exitFullscreen();
-        }
-        
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            toast.textContent = msg; toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2500);
-        }
-        
-        document.addEventListener('keydown', (e) => { if (e.ctrlKey && e.key==='s') { e.preventDefault(); saveToStorage(); } });
-        
-        init();
+            renderTable();
+            autoSave();
+            showToast(`导入 ${count} 行`, 'success');
+        } catch(err) { showToast('导入失败', 'error'); }
+        input.value = '';
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+// ===== Toast =====
+function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (type ? ' ' + type : '');
+    setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function updateSaveInfo() {
+    const el = document.getElementById('saveInfo');
+    if (!el) return;
+    if (DB.lastSave) {
+        const d = new Date(DB.lastSave);
+        el.textContent = '已保存: ' + d.toLocaleTimeString();
+    } else {
+        el.textContent = '未保存';
+    }
+}
+
+// ===== 文件拖入 =====
+function handleFileDrop(e) {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv')) {
+        const input = document.getElementById('importFile');
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        importExcel(input);
+    } else {
+        showToast('仅支持 .xlsx .xls .csv 文件', 'error');
+    }
+}
+
+// ===== 汇总 =====
+function recalcSummary() {
+    const rows = [];
+    const map = {};
+    (DB.data.purchase.rows || []).forEach(p => {
+        const k = (p.partNo||'') + '|' + (p.supplier||'');
+        if (!map[k]) map[k] = {partNo: p.partNo||'', supplier: p.supplier||'', orderQty: 0, inQty: 0};
+        map[k].orderQty += parseFloat(p.purQty)||0;
+    });
+    (DB.data.inbound.rows || []).forEach(i => {
+        const k = (i.partNo||'') + '|' + (i.supplier||'');
+        if (!map[k]) map[k] = {partNo: i.partNo||'', supplier: i.supplier||'', orderQty: 0, inQty: 0};
+        map[k].inQty += parseFloat(i.inQty)||0;
+    });
+    const outMap = {}, inMap = {};
+    (DB.data.outbound.rows || []).forEach(o => { const k = o.partNo||''; outMap[k] = (outMap[k]||0)+(parseFloat(o.outQty)||0); });
+    (DB.data.inbound.rows || []).forEach(i => { const k = i.partNo||''; inMap[k] = (inMap[k]||0)+(parseFloat(i.inQty)||0); });
+    Object.values(map).forEach(item => {
+        rows.push({...item, pending: item.orderQty - item.inQty, stock: (inMap[item.partNo]||0)-(outMap[item.partNo]||0)});
+    });
+    DB.data.summary.rows = rows;
+    renderTable();
+    autoSave();
+}
+
+// ===== 初始化 =====
+init();
     </script>
 </body>
 </html>
